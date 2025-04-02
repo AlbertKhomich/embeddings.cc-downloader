@@ -8,6 +8,7 @@ from elasticsearch import Elasticsearch
 from create_index import create_index
 from prepare_data import post_embeddings
 from helper import get_file_paths, unpack_tar_gz, clean_dir
+from re_extract import only_unextracted
 
 log_dir = '/scratch/hpc-prf-whale/albert/uploader_embeddings/logs'
 log_filename = os.path.join(log_dir, time.strftime('%Y-%m-%d_%H-%M-%S') + '_log.log')
@@ -31,7 +32,7 @@ logging.getLogger().addHandler(error_handler)
 password = os.getenv('ELASTIC_SEARCH_UNI_PASSWORD')
 index_name = 'whale'
 parent_dir = '/scratch/hpc-prf-whale/albert/uploader_embeddings/data'
-embedding_dir = '/scratch/hpc-prf-whale/WHALE-output/embeddings/geo/models'
+embedding_dir = '/scratch/hpc-prf-whale/WHALE-output/embeddings/adr/models'
 # dimensions = 256
 # create_response = create_index(password, index_name, dimensions)
 # print("Index creation response:", create_response)
@@ -48,7 +49,7 @@ def process_emb_dir(embedding_dir):
     model_path = file_paths['model.pt']
 
     try:
-        logging.info("Preparing data for tranfering.")
+        logging.info("Preparing data for transfering.")
         model = torch.load(model_path, map_location=torch.device('cpu'))
     except Exception as e:
         logging.error(f"No model in: {model_path}")
@@ -68,19 +69,18 @@ def process_emb_dir(embedding_dir):
 
     logging.info('Directory finished.')
 
-def main():
+@only_unextracted(embedding_dir)
+def main(unprocessed_archives):
     os.makedirs(embedding_dir, exist_ok=True)
 
-    for filename in os.listdir(embedding_dir):
-        if filename.endswith('.tar.gz'):
-            file_path = os.path.join(embedding_dir, filename)
+    for file_path in unprocessed_archives:
+        unpack_tar_gz(file_path, parent_dir)
 
-            unpack_tar_gz(file_path, parent_dir)
+        for e in os.listdir(parent_dir):
+            e_path = os.path.join(parent_dir, e)
+            process_emb_dir(e_path)
 
-            for e in os.listdir(parent_dir):
-                e_path = os.path.join(parent_dir, e)
-                process_emb_dir(e_path)
+        clean_dir(parent_dir)
 
-            clean_dir(parent_dir)
-
-main()
+if __name__ == '__main__':
+    main()

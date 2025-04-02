@@ -1,6 +1,36 @@
 import re
 import sys
+import os
+import logging
 import subprocess
+
+def only_unextracted(embedding_dir, log_file=None):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            processed = set()
+            if log_file and os.path.exists(log_file):
+                extraction_pattern = re.compile(r"Successfully extracted\s+(.*?)\s+to\s+(.*)")
+
+                with open(log_file, "r") as f:
+                    for line in f:
+                        line = line.strip()
+                        m = extraction_pattern.search(line)
+                        if m:
+                            archive_path = m.group(1)
+                            archive_name = os.path.basename(archive_path)
+                            processed.add(archive_name)
+
+            all_archives = [f for f in os.listdir(embedding_dir) if f.endswith('.tar.gz')]
+
+            if processed:
+                unprocessed_archives = [os.path.join(embedding_dir, a) for a in all_archives if a not in processed]
+            else:
+                unprocessed_archives = [os.path.join(embedding_dir,a ) for a in all_archives]
+
+            logging.info("Unprocessed archives: %s", unprocessed_archives)
+            return func(unprocessed_archives, *args, **kwargs)
+        return wrapper
+    return decorator
 
 def parse_log(filename):
     extraction_pattern = re.compile(r"Successfully extracted\s+(.*?)\s+to\s+(.*)")
