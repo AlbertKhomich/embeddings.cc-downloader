@@ -1,5 +1,4 @@
 import pickle
-import json
 import logging
 from add_data import add_data
 from helper import chunk_docs
