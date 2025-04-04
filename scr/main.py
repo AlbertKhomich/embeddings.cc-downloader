@@ -4,6 +4,7 @@ import json
 import time
 import torch
 import logging
+import shutil
 from elasticsearch import Elasticsearch
 from create_index import create_index
 from prepare_data import post_embeddings
@@ -32,7 +33,7 @@ logging.getLogger().addHandler(error_handler)
 password = os.getenv('ELASTIC_SEARCH_UNI_PASSWORD')
 index_name = 'whale'
 parent_dir = '/scratch/hpc-prf-whale/albert/uploader_embeddings/data'
-embedding_dir = '/scratch/hpc-prf-whale/WHALE-output/embeddings/adr/models'
+embedding_dir = '/scratch/hpc-prf-whale/WHALE-output/embeddings/hreview/models'
 # dimensions = 256
 # create_response = create_index(password, index_name, dimensions)
 # print("Index creation response:", create_response)
@@ -53,6 +54,7 @@ def process_emb_dir(embedding_dir):
         model = torch.load(model_path, map_location=torch.device('cpu'))
     except Exception as e:
         logging.error(f"No model in: {model_path}")
+        shutil.rmtree(embedding_dir)
         return
 
     try:
@@ -67,20 +69,28 @@ def process_emb_dir(embedding_dir):
     except Exception as e:
             logging.error(f"Error adding relation embeddings: {e}")
 
+    shutil.rmtree(embedding_dir)
     logging.info('Directory finished.')
 
-@only_unextracted(embedding_dir)
+@only_unextracted(embedding_dir, '/scratch/hpc-prf-whale/albert/uploader_embeddings/logs/hreview_checkpoint.log')
 def main(unprocessed_archives):
     os.makedirs(embedding_dir, exist_ok=True)
 
-    for file_path in unprocessed_archives:
+    total_archives = len(unprocessed_archives)
+
+    for e in os.listdir(parent_dir):
+        e_path = os.path.join(parent_dir, e)
+        process_emb_dir(e_path)
+
+    for idx, file_path in enumerate(unprocessed_archives, start=1):
         unpack_tar_gz(file_path, parent_dir)
 
         for e in os.listdir(parent_dir):
             e_path = os.path.join(parent_dir, e)
             process_emb_dir(e_path)
 
-        clean_dir(parent_dir)
+        progress = (idx / total_archives) * 100 if total_archives else 100
+        logging.info(f"Progress: {progress:.2f}%")
 
 if __name__ == '__main__':
     main()
