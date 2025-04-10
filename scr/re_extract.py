@@ -27,7 +27,6 @@ def only_unextracted(embedding_dir, log_file=None):
             else:
                 unprocessed_archives = [os.path.join(embedding_dir,a ) for a in all_archives]
 
-            logging.info("Unprocessed archives: %s", unprocessed_archives)
             return func(unprocessed_archives, *args, **kwargs)
         return wrapper
     return decorator

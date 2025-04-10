@@ -1,6 +1,5 @@
 import requests
 import json
-import time
 import logging
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type, before_sleep_log
 
@@ -12,7 +11,7 @@ logger = logging.getLogger(__name__)
     retry=retry_if_exception_type(requests.exceptions.RequestException),
     before_sleep=before_sleep_log(logger, logging.INFO)
 )
-def add_data(password, index, docs, base_url="http://embeddings.cs.upb.de:1337"):
+def add_data(password, index, docs, base_url="http://131.234.26.202:1337"):
     url = f"{base_url}/add"
     payload = {
         "password": password,

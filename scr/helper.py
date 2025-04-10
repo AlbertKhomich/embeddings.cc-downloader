@@ -8,14 +8,18 @@ def get_file_paths(dir):
     filenames = [
         'entity_to_idx.p',
         'relation_to_idx.p',
-        'model.pt'
+        'model.pt',
+        'entity_to_idx.csv',
+        'relation_to_idx.csv'
     ]
 
     file_paths = {}
 
     for filename in filenames:
         file_path = os.path.join(dir, filename)
-        file_paths[filename] = file_path
+
+        if os.path.exists(file_path):
+            file_paths[filename] = file_path
 
     return file_paths
 
