@@ -22,7 +22,7 @@ def process_emb_dir(embedding_dir):
 
     entity_idx_path = file_paths.get('entity_to_idx.p') or file_paths.get('entity_to_idx.csv')
     relation_idx_path = file_paths.get('relation_to_idx.p') or file_paths.get('relation_to_idx.csv')
-    model_path = file_paths.get('model.pt')
+    model_path = file_paths.get('model.pt') or file_paths.get('model_partial_0.pt')
 
     try:
         logging.info("Preparing data for transfering.")

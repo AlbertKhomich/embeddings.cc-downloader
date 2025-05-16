@@ -31,7 +31,7 @@ embedding_dir = '/scratch/hpc-prf-whale/WHALE-output/embeddings/hcard/models'
 # create_response = create_index(password, index_name, dimensions)
 # print("Index creation response:", create_response)
 
-@only_unextracted(embedding_dir)
+@only_unextracted(embedding_dir, '/scratch/hpc-prf-whale/albert/uploader_embeddings/logs/temp/1-4_runs.log')
 def main(unprocessed_archives):
     os.makedirs(embedding_dir, exist_ok=True)
 

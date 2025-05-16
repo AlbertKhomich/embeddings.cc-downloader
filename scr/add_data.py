@@ -5,9 +5,11 @@ from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_excep
 
 logger = logging.getLogger(__name__)
 
+exp_base = (3600 / 10) ** (1 / 3)
+
 @retry(
-    wait=wait_exponential(multiplier=10, min=10, max=80),
-    stop=stop_after_attempt(4),
+    wait=wait_exponential(multiplier=10, exp_base=exp_base, max=3600),
+    stop=stop_after_attempt(5),
     retry=retry_if_exception_type(requests.exceptions.RequestException),
     before_sleep=before_sleep_log(logger, logging.INFO)
 )

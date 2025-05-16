@@ -9,6 +9,7 @@ def get_file_paths(dir):
         'entity_to_idx.p',
         'relation_to_idx.p',
         'model.pt',
+        'model_partial_0.pt',
         'entity_to_idx.csv',
         'relation_to_idx.csv'
     ]
