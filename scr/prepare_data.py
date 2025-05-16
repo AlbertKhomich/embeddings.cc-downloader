@@ -1,9 +1,12 @@
 import pickle
 import csv
+import sys
 import os
 import logging
 from add_data import add_data
 from helper import chunk_docs
+
+csv.field_size_limit(sys.maxsize)
 
 def load_mapping_pickle(mapping_path):
     with open(mapping_path, 'rb') as f:
@@ -42,17 +45,13 @@ def extract_embeddings(model, mapping_path, embedding_key):
 
     embeddings = model[embedding_key].detach().numpy()
 
-    docs = []
-    for i in range(len(embeddings)):
+    for i, emb_tensor in enumerate(model[embedding_key]):
         entity = idx_to_val[i].strip('<>')
-        doc = [entity, embeddings[i].tolist()]
-        docs.append(doc)
-
-    return docs    
+        vec = emb_tensor.detach().cpu().numpy().tolist()
+        yield [entity, vec]
 
 def post_embeddings(model, idx_path, embeddings_weight, password, index_name):
     docs = extract_embeddings(model, idx_path, embeddings_weight)
-    logging.info(f'Test vector: {docs[0]}')
     max_payload_size = 1024 * 1024 # 1 MB
 
     responses = []

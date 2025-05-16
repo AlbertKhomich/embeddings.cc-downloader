@@ -38,11 +38,11 @@ def process_emb_dir(embedding_dir):
     except Exception as e:
         logging.error(f"Error adding entity embeddings: {e}")
 
-    try:
-        add_response_r = post_embeddings(model, relation_idx_path, 'relation_embeddings.weight', password, index_name)
-        logging.info(f"Uploading relations: {add_response_r}")
-    except Exception as e:
-            logging.error(f"Error adding relation embeddings: {e}")
+    # try:
+    #     add_response_r = post_embeddings(model, relation_idx_path, 'relation_embeddings.weight', password, index_name)
+    #     logging.info(f"Uploading relations: {add_response_r}")
+    # except Exception as e:
+    #         logging.error(f"Error adding relation embeddings: {e}")
 
     shutil.rmtree(embedding_dir)
     logging.info('Directory finished.')
