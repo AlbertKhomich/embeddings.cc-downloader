@@ -1,4 +1,5 @@
 import os
+import glob
 import shutil
 import tarfile
 import logging
@@ -8,19 +9,20 @@ def get_file_paths(dir):
     filenames = [
         'entity_to_idx.p',
         'relation_to_idx.p',
-        'model.pt',
-        'model_partial_0.pt',
         'entity_to_idx.csv',
         'relation_to_idx.csv'
     ]
 
     file_paths = {}
 
-    for filename in filenames:
-        file_path = os.path.join(dir, filename)
+    for fn in filenames:
+        p = os.path.join(dir, fn)
+        if os.path.exists(p):
+            file_paths[fn] = p
 
-        if os.path.exists(file_path):
-            file_paths[filename] = file_path
+    for path in glob.glob(os.path.join(dir, '*model*.pt')):
+        file_paths['model'] = path
+        break
 
     return file_paths
 

@@ -13,36 +13,52 @@ def process_parent_dir(parent_dir):
         e_path = os.path.join(parent_dir, e)
         process_emb_dir(e_path)
 
+def cleanup(dir_path):
+    shutil.rmtree(dir_path)
+    logging.info(f"Cleaned up {dir_path}")
+
 def process_emb_dir(embedding_dir):
-    logging.info('Downloading started.')
+    logging.info('Uploading started.')
 
     file_paths = get_file_paths(embedding_dir)
 
     logging.info(f"File paths: {file_paths}")
 
-    entity_idx_path = file_paths.get('entity_to_idx.p') or file_paths.get('entity_to_idx.csv')
-    relation_idx_path = file_paths.get('relation_to_idx.p') or file_paths.get('relation_to_idx.csv')
-    model_path = file_paths.get('model.pt') or file_paths.get('model_partial_0.pt')
-
+    model_path = file_paths.get('model')
+    if not model_path:
+        logging.error(f"No model in: {embedding_dir}")
+        cleanup(embedding_dir)
+        return
     try:
-        logging.info("Preparing data for transfering.")
+        logging.info("Preparing data for transferring.")
         model = torch.load(model_path, map_location=torch.device('cpu'))
     except Exception as e:
-        logging.error(f"No model in: {model_path}")
-        shutil.rmtree(embedding_dir)
+        logging.error(f"Failed to load model at {model_path}: {e}")
+        cleanup(embedding_dir)
         return
 
+    entity_idx_path = file_paths.get('entity_to_idx.p') or file_paths.get('entity_to_idx.csv')
+    if not entity_idx_path:
+        logging.error(f"No entity index file in {embedding_dir}")
+        cleanup(embedding_dir)
+        return
     try:
         add_response_e = post_embeddings(model, entity_idx_path, 'entity_embeddings.weight', password, index_name)
         logging.info(f"Uploading entities: {add_response_e}")
     except Exception as e:
-        logging.error(f"Error adding entity embeddings: {e}")
+        logging.error(f"Error adding entity embeddings from {entity_idx_path}: {e}")
+        cleanup(embedding_dir)
+        return
 
-    # try:
-    #     add_response_r = post_embeddings(model, relation_idx_path, 'relation_embeddings.weight', password, index_name)
-    #     logging.info(f"Uploading relations: {add_response_r}")
-    # except Exception as e:
-    #         logging.error(f"Error adding relation embeddings: {e}")
+    # relation_idx_path = file_paths.get('relation_to_idx.p') or file_paths.get('relation_to_idx.csv')
+    # if relation_idx_path:
+    #     try:
+    #         add_response_r = post_embeddings(model, relation_idx_path, 'relation_embeddings.weight', password, index_name)
+    #         logging.info(f"Uploading relations: {add_response_r}")
+    #     except Exception as e:
+    #             logging.error(f"Error adding relation embeddings from {relation_idx_path}: {e}")
+    # else:
+    #     logging.warning(f"No relation index file found in {embedding_dir}; skipping relation upload.")
 
     shutil.rmtree(embedding_dir)
     logging.info('Directory finished.')
