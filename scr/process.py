@@ -29,21 +29,40 @@ def process_emb_dir(embedding_dir):
         logging.error(f"No model in: {embedding_dir}")
         cleanup(embedding_dir)
         return
+
     try:
-        logging.info("Preparing data for transferring.")
-        model = torch.load(model_path, map_location=torch.device('cpu'))
+        ckpt = torch.load(model_path, map_location='cpu')
     except Exception as e:
         logging.error(f"Failed to load model at {model_path}: {e}")
         cleanup(embedding_dir)
         return
+
+    state_dict = ckpt.state_dict() if hasattr(ckpt, 'state_dict') else ckpt
+
+    entity_keys = [k for k in state_dict.keys() if 'entity_embeddings.weight' in k]
+    if not entity_keys:
+        logging.error(f"No entity_embeddings.weight key in {model_path}")
+        cleanup(embedding_dir)
+        return
+    if len(entity_keys) > 1:
+        logging.warning(f"Multiple matches for entity_embeddings.weight: {entity_keys}; using the first one.")
+    emb_key = entity_keys[0]
+    logging.info(f"Using embedding key: {emb_key}")
 
     entity_idx_path = file_paths.get('entity_to_idx.p') or file_paths.get('entity_to_idx.csv')
     if not entity_idx_path:
         logging.error(f"No entity index file in {embedding_dir}")
         cleanup(embedding_dir)
         return
+
     try:
-        add_response_e = post_embeddings(model, entity_idx_path, 'entity_embeddings.weight', password, index_name)
+        add_response_e = post_embeddings(
+            state_dict, 
+            entity_idx_path,
+            emb_key,
+            password, 
+            index_name
+        )
         logging.info(f"Uploading entities: {add_response_e}")
     except Exception as e:
         logging.error(f"Error adding entity embeddings from {entity_idx_path}: {e}")
