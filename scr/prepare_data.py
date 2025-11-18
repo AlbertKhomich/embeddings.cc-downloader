@@ -1,5 +1,6 @@
 import pickle
 import csv
+import time
 import sys
 import os
 import logging
@@ -50,19 +51,24 @@ def extract_embeddings(model, mapping_path, embedding_key):
         vec = emb_tensor.detach().cpu().numpy().tolist()
         yield [entity, vec]
 
-def post_embeddings(model, idx_path, embeddings_weight, password, index_name):
+def post_embeddings(model, idx_path, embeddings_weight, password, index_name):    
     docs = extract_embeddings(model, idx_path, embeddings_weight)
-    max_payload_size = 1024 * 1024 # 1 MB
+    max_payload_size = 256 * 1024
 
     responses = []
     logging.info("Transfering...")
 
-    for chunk in chunk_docs(docs, max_payload_size):        
+    for i, chunk in enumerate(chunk_docs(docs, max_payload_size), start=1):
         try:
             response = add_data(password, index_name, chunk)
         except Exception as e:
-            logging.info(f"Failed to add data after retries: {e}")
+            logging.exception(f"[Chunk #{i}] Failed to add data after retries")
+            
             response = None
         responses.append(response)
+
+        if i % 10 == 0:
+            logging.info(f"Completed {i} bulks - sleeping to let merges catch up")
+            time.sleep(2)
 
     return responses
