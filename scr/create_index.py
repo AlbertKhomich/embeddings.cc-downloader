@@ -1,6 +1,7 @@
 import requests
+from config import API_URL
 
-def create_index(password, index, dimensions, shards=5, base_url="http://embeddings.cs.upb.de:1337"):
+def create_index(password, index, dimensions, shards=5, base_url=API_URL):
     endpoint = f"{base_url}/create_index"
     params = {
         "password": password,

@@ -6,6 +6,7 @@ import os
 import logging
 from add_data import add_data
 from helper import chunk_docs
+from config import BATCH_SIZE
 
 csv.field_size_limit(sys.maxsize)
 
@@ -48,12 +49,17 @@ def extract_embeddings(model, mapping_path, embedding_key):
 
     for i, emb_tensor in enumerate(model[embedding_key]):
         entity = idx_to_val[i].strip('<>')
+
+        #TODO: remove this below!
+        if entity.startswith("http://whale.data.dice-research.org/.well-known/genid/"):
+            continue
+
         vec = emb_tensor.detach().cpu().numpy().tolist()
         yield [entity, vec]
 
 def post_embeddings(model, idx_path, embeddings_weight, password, index_name):    
     docs = extract_embeddings(model, idx_path, embeddings_weight)
-    max_payload_size = 256 * 1024
+    max_payload_size = BATCH_SIZE
 
     responses = []
     logging.info("Transfering...")

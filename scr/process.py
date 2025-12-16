@@ -4,10 +4,10 @@ import shutil
 import os
 from helper import get_file_paths
 from prepare_data import post_embeddings
+from config import INDEX_TO_UPLOAD
 
 password = os.getenv('ELASTIC_SEARCH_UNI_PASSWORD')
-index_name = 'local_demo'
-# index_name = 'whale'
+index_name = INDEX_TO_UPLOAD
 
 def process_parent_dir(parent_dir):
     for e in os.listdir(parent_dir):

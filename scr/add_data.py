@@ -2,6 +2,7 @@ import requests
 import time
 import json
 import logging
+from config import API_URL
 from tenacity import (
     retry, 
     wait_exponential,
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 exp_base = (3600 / 10) ** (1 / 3)
 
-def ping(base_url='http://131.234.26.202:1337', timeout=5):
+def ping(base_url=API_URL, timeout=5):
     try:
         r = requests.get(f"{base_url}/ping", timeout=timeout)
         r.raise_for_status()
@@ -37,7 +38,7 @@ def _before_retry_callback(retry_state):
     retry=retry_if_exception_type(requests.exceptions.RequestException),
     before_sleep=_before_retry_callback
 )
-def add_data(password, index, docs, base_url="http://131.234.26.202:1337"):
+def add_data(password, index, docs, base_url=API_URL):
     url = f"{base_url}/add"
     payload = {
         "password": password,

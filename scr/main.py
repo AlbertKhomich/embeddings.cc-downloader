@@ -5,8 +5,9 @@ from create_index import create_index
 from helper import unpack_tar_gz
 from process import process_parent_dir
 from re_extract import only_unextracted
+from config import LOG_DIR, PARENT_DIR, EMB_DIR, INDEX_TO_UPLOAD
 
-log_dir = '/scratch/hpc-prf-whale/albert/uploader_embeddings/logs'
+log_dir = LOG_DIR
 log_filename = os.path.join(log_dir, time.strftime('%Y-%m-%d_%H-%M-%S') + '_log.log')
 error_log_filename = os.path.join(log_dir, time.strftime('%Y-%m-%d_%H-%M-%S') + '_error.log')
 
@@ -25,12 +26,14 @@ error_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(me
 
 logging.getLogger().addHandler(error_handler)
 
-parent_dir = '/scratch/hpc-prf-whale/albert/uploader_embeddings/data'
-embedding_dir = '/scratch/hpc-prf-whale/WHALE-output/embeddings/microdata/models'
-create_response = create_index('', 'local_demo', 256)
-print("Index creation response:", create_response)
+parent_dir = PARENT_DIR
+embedding_dir = EMB_DIR
 
-@only_unextracted(embedding_dir, "/scratch/hpc-prf-whale/albert/uploader_embeddings/logs/2025-06-23_11-04-57_log.log")
+#TODO: make an optional argument
+password = os.getenv('ELASTIC_SEARCH_UNI_PASSWORD')
+create_response = create_index(password, INDEX_TO_UPLOAD, 256, 1)
+
+@only_unextracted(embedding_dir)
 def main(unprocessed_archives):
     os.makedirs(embedding_dir, exist_ok=True)
 
