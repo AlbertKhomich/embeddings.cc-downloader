@@ -50,10 +50,6 @@ def extract_embeddings(model, mapping_path, embedding_key):
     for i, emb_tensor in enumerate(model[embedding_key]):
         entity = idx_to_val[i].strip('<>')
 
-        #TODO: remove this below!
-        if entity.startswith("http://whale.data.dice-research.org/.well-known/genid/"):
-            continue
-
         vec = emb_tensor.detach().cpu().numpy().tolist()
         yield [entity, vec]
 
@@ -65,12 +61,8 @@ def post_embeddings(model, idx_path, embeddings_weight, password, index_name):
     logging.info("Transfering...")
 
     for i, chunk in enumerate(chunk_docs(docs, max_payload_size), start=1):
-        try:
-            response = add_data(password, index_name, chunk)
-        except Exception as e:
-            logging.exception(f"[Chunk #{i}] Failed to add data after retries")
-            
-            response = None
+        
+        response = add_data(password, index_name, chunk)
         responses.append(response)
 
         if i % 10 == 0:

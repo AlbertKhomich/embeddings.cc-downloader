@@ -1,6 +1,8 @@
 import os
 import time
 import logging
+import argparse
+
 from create_index import create_index
 from helper import unpack_tar_gz
 from process import process_parent_dir
@@ -29,13 +31,32 @@ logging.getLogger().addHandler(error_handler)
 parent_dir = PARENT_DIR
 embedding_dir = EMB_DIR
 
-#TODO: make an optional argument
-password = os.getenv('ELASTIC_SEARCH_UNI_PASSWORD')
-create_response = create_index(password, INDEX_TO_UPLOAD, 256, 1)
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--create-index",
+        action='store_true',
+        help='Create/unsure Elasticsearch index before processing',
+    )
+
+    parser.add_argument('--index', default=INDEX_TO_UPLOAD, help="Elasticsearch index name")
+    parser.add_argument("--dims", type=int, default=256, help="Embedding dimension")
+    parser.add_argument("--shards", type=int, default=1, help="Number of shards")
+
+    return parser.parse_args()
+
+args = parse_args()
 
 @only_unextracted(embedding_dir)
-def main(unprocessed_archives):
+def main(unprocessed_archives: list[str]) -> None:
     os.makedirs(embedding_dir, exist_ok=True)
+
+    if args.create_index:
+        password = os.getenv("ELASTIC_SEARCH_UNI_PASSWORD")
+        if not password:
+            raise RuntimeError("ELASTIC_SEARCH_UNI_PASSWORD is not set")
+        create_index(password, args.index, args.dims, args.shards)
+        logging.info(f"Index ensured/created: {args.index}")
 
     total_archives = len(unprocessed_archives)
 

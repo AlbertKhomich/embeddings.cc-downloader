@@ -67,18 +67,7 @@ def process_emb_dir(embedding_dir):
         logging.info(f"Uploading entities: {add_response_e}")
     except Exception as e:
         logging.error(f"Error adding entity embeddings from {entity_idx_path}: {e}")
-        cleanup(embedding_dir)
         return
-
-    # relation_idx_path = file_paths.get('relation_to_idx.p') or file_paths.get('relation_to_idx.csv')
-    # if relation_idx_path:
-    #     try:
-    #         add_response_r = post_embeddings(model, relation_idx_path, 'relation_embeddings.weight', password, index_name)
-    #         logging.info(f"Uploading relations: {add_response_r}")
-    #     except Exception as e:
-    #             logging.error(f"Error adding relation embeddings from {relation_idx_path}: {e}")
-    # else:
-    #     logging.warning(f"No relation index file found in {embedding_dir}; skipping relation upload.")
 
     shutil.rmtree(embedding_dir)
     logging.info('Directory finished.')

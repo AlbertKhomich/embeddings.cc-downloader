@@ -1,13 +1,19 @@
 import re
 import sys
 import os
-import logging
 import subprocess
+from functools import wraps
+from typing import Callable, Optional, TypeVar
+from typing_extensions import ParamSpec, Concatenate
 
-def only_unextracted(embedding_dir, log_file=None):
-    def decorator(func):
-        def wrapper(*args, **kwargs):
-            processed = set()
+P = ParamSpec("P")
+R = TypeVar("R")
+
+def only_unextracted(embedding_dir: str, log_file: Optional[str] =None) -> Callable[[Callable[Concatenate[list[str], P], R]], Callable[P, R]]:
+    def decorator(func: Callable[Concatenate[list[str], P], R]) -> Callable[P, R]:
+        @wraps(func)
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            processed: set[str] = set()
             if log_file and os.path.exists(log_file):
                 extraction_pattern = re.compile(r"Successfully extracted\s+(.*?)\s+to\s+(.*)")
 
